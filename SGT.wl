@@ -33,6 +33,7 @@
 (*spectrumLaplacian::usage="spectrumLaplacian[g]";*)
 (*laplacianNormalised::usage="laplacianNormalised[g]";*)
 (*spectrumLaplacianNormalised::usage="spectrumLaplacianNormalised[g]";*)
+(*effectiveResistances::usage="effectiveResistances[lapMat]";*)
 
 
 (* ::Subsection::Closed:: *)
@@ -116,16 +117,6 @@ Join[
 
 
 (* ::Text:: *)
-(*Here I define the so-called 'superstar' graph. It consists of a complete graph on Subscript[n, 1]edges and every other edge is just connected to the Subscript[n, 1]in the 'middle'.\[AliasDelimiter]\[AliasDelimiter]*)
-
-
-superStarSpikeList[n_,n1_]:=(UndirectedEdge[#[[1]],#[[2]]])&/@Partition[Flatten[Outer[List,Range[n1],Range[n1+1,n]]],2]
-
-
-superStarGraph[n_,n1_]:=GraphUnion[CompleteGraph[n1],Graph[superStarSpikeList[n,n1]]]
-
-
-(* ::Text:: *)
 (*Create an easy constructor for an Erdos-Renyi graph.*)
 
 
@@ -162,40 +153,6 @@ almostBipartite[n_,p_,q_]:=GraphUnion[combineGraphs[erdosGraph[n,p],erdosGraph[n
 
 
 almostBipartite[n_,p_]:=GraphUnion[combineGraphs[erdosGraph[n,1-p],erdosGraph[n,1-p]],GraphDifference[CompleteGraph[{n,n}],erdosGraph[2n,1-p]]]
-
-
-(* ::Text:: *)
-(*Construct a 'grid' graph with a flow direction. Just returns the adjacency matrix.*)
-
-
-gridFlow[h_,w_,gridWeight_,flowWeight_]:=gridWeight * AdjacencyMatrix[
-	combineGraphs[
-		GridGraph[{h, w}],
-		GridGraph[{h, w}]]
-	] + flowWeight * AdjacencyMatrix[
-		Graph[
-			Range[2*h*w],
-			(#/.DirectedEdge[a_,b_]->DirectedEdge[a,b+(h*w)])&/@(((h*#)\[DirectedEdge](h*#))&/@Range[w])
-		]
-	] + Conjugate[flowWeight] * Transpose[AdjacencyMatrix[
-		Graph[
-			Range[2*h*w],
-			(#/.DirectedEdge[a_,b_]->DirectedEdge[a,b+(h*w)])&/@(((h*#)\[DirectedEdge](h*#))&/@Range[w])
-		]
-	]]
-
-
-(* ::Text:: *)
-(*Construct a ' loopy star' graph. This is a star with a loop on the end of each spike.*)
-
-
-addToStar[S_,G_,n_]:=GraphUnion[S,VertexReplace[renumberGraph[G,Max[VertexList[S]]-1],{(Max[VertexList[S]])->(n+1)}]]
-
-
-loopyStarGraph[n1_,n2_]:=Nest[
-addToStar[#,CycleGraph[n2],(VertexCount[#]-(n1+1))/(n2-1)+1]&,
-StarGraph[n1+1],
-n1]
 
 
 (* ::Text:: *)
@@ -324,7 +281,7 @@ Flatten[Table[
 sbmClusters[k_,n_]:=(Range[(#-1)*n + 1,(#*n)])&/@Range[k]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*Hermitian Matrices for Directed Graphs*)
 
 
@@ -527,7 +484,7 @@ ListPointPlot3D[clusterPoints[Transpose[{eig1,eig2, eig3}],#]&/@clusters,PlotRan
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Ramanujan Graphs*)
 
 
@@ -539,6 +496,25 @@ averageDegree[g_]:=Mean[VertexDegree[g]]
 
 
 ramanujanGraphQ[g_]:=lambdaGraph[g]<=2Sqrt[averageDegree[g]-1]
+
+
+(* ::Subsection:: *)
+(*Effective Resistances*)
+
+
+(* ::Text:: *)
+(*Compute a matrix containing the effective resistances of every edge in a graph.*)
+
+
+effectiveResistances[lapMat_]:=With[{invLapMat=PseudoInverse[lapMat//N],n=Length[lapMat]},
+Table[
+	If[i==j,0,
+		({indicatorVector[i,n]-indicatorVector[j,n]}.invLapMat.Transpose[{indicatorVector[i,n]-indicatorVector[j,n]}])[[1]][[1]]
+	],
+	{i,1,n},
+	{j,1,n}
+]
+]
 
 
 (* ::Subsection::Closed:: *)
@@ -567,7 +543,7 @@ flowSweepSet[orderedVertices_,G_]:=generalSweepSet[
 ]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*General Linear Algebra*)
 
 
@@ -824,8 +800,8 @@ plotTaylors[f_,x0_,n_,min_,max_]:=Plot[{f[y]}~Join~(taylorList[f,x0,n]/.{x->y}),
 permuteMatrix[M_]:=With[{s=RandomSample[Range[Length[M]]]},M[[s,s]]]
 
 
-(* ::Subsection:: *)
-(*Closing Code*)
+(* ::Subsection::Closed:: *)
+(*Boilerplate*)
 
 
 (* ::Text:: *)
