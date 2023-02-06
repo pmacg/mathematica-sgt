@@ -242,9 +242,14 @@ simpleDsbm[n_]:=simpleDsbm[n,1,1,1]
 (*A completely general SBM model for undirected graphs.*)
 
 
-edgesForCluster[c1_,c2_,prob_]:=With[
+approxEdgesForCluster[c1_,c2_,prob_]:=With[
 {numEdges=RandomVariate[BinomialDistribution[Length[c1]*Length[c2],prob]]},
 MapThread[UndirectedEdge,{RandomChoice[c1,numEdges],RandomChoice[c2,numEdges]}]
+]
+
+
+edgesForCluster[c1_,c2_,prob_]:=Flatten[
+	Table[RandomChoice[{prob,1-prob}->{c1[[i]]\[UndirectedEdge]c2[[j]],{}}],{i,1,Length[c1]},{j,1,Length[c2]}]
 ]
 
 
