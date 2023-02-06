@@ -258,7 +258,7 @@ Flatten[Table[
 	edgesForCluster[
 		Range[Total[ns[[1;;i-1]]]+1,Total[ns[[1;;i-1]]]+ns[[i]]],
 		Range[Total[ns[[1;;j-1]]]+1,Total[ns[[1;;j-1]]]+ns[[j]]],
-		If[i==j,0.5M[[i,j]],M[[i,j]]]
+		M[[i,j]]
 	],
 	{i,1,Length[M]},{j,i,Length[M]}
 ]]]
