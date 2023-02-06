@@ -248,7 +248,7 @@ MapThread[UndirectedEdge,{RandomChoice[c1,numEdges],RandomChoice[c2,numEdges]}]
 ]
 
 
-sbm[ns_,M_]:=Graph[Range[Total[ns]],
+generalSBM[ns_,M_]:=Graph[Range[Total[ns]],
 Flatten[Table[
 	edgesForCluster[
 		Range[Total[ns[[1;;i-1]]]+1,Total[ns[[1;;i-1]]]+ns[[i]]],
@@ -257,6 +257,9 @@ Flatten[Table[
 	],
 	{i,1,Length[M]},{j,i,Length[M]}
 ]]]
+
+
+sbm[n_,k_,p_,q_]:=removeSelfLoops[generalSBM[Table[n,{i,1,k}],Table[If[i==j,p,q],{i,1,k},{j,1,k}]]]
 
 
 (* ::Text:: *)
@@ -281,7 +284,7 @@ Flatten[Table[
 sbmClusters[k_,n_]:=(Range[(#-1)*n + 1,(#*n)])&/@Range[k]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Hermitian Matrices for Directed Graphs*)
 
 
@@ -364,22 +367,6 @@ clszCutImbalanceVolume[X_,Y_,G_]:=clszCutImbalance[X,Y,G]*Min[{directedVolume[X,
 
 
 calcRandWalk[W_,x0_,n_]:=Nest[(#.W)&,x0,n]
-
-
-(* ::Text:: *)
-(*Compute some useful matrices for the local algorithm proof.*)
-
-
-A2[G_]:=MatrixPower[hermitianAdjacency[G]//N,2]//Re
-
-
-L2[G_]:=degreeFromAdjacency[A2[G]]-A2[G]
-
-
-L2p[G_]:=degreeFromAdjacency[pos[A2[G]]]-pos[A2[G]]
-
-
-L2pn[G_]:=Inverse[Sqrt[degreeFromAdjacency[pos[A2[G]]]]].L2p[G].Inverse[Sqrt[degreeFromAdjacency[pos[A2[G]]]]]
 
 
 (* ::Subsection:: *)
@@ -485,39 +472,6 @@ ListPointPlot3D[clusterPoints[Transpose[{eig1,eig2, eig3}],#]&/@clusters,PlotRan
 
 
 (* ::Subsection:: *)
-(*Ramanujan Graphs*)
-
-
-(* ::Text:: *)
-(*A graph is Ramanujan iff \[Lambda](G) <= 2 Sqrt[d-1] where d is the average degree of the graph. This means that \[Lambda](G) is close to the lowest possible (and so the graph is a good expander).*)
-
-
-averageDegree[g_]:=Mean[VertexDegree[g]]
-
-
-ramanujanGraphQ[g_]:=lambdaGraph[g]<=2Sqrt[averageDegree[g]-1]
-
-
-(* ::Subsection:: *)
-(*Effective Resistances*)
-
-
-(* ::Text:: *)
-(*Compute a matrix containing the effective resistances of every edge in a graph.*)
-
-
-effectiveResistances[lapMat_]:=With[{invLapMat=PseudoInverse[lapMat//N],n=Length[lapMat]},
-Table[
-	If[i==j,0,
-		({indicatorVector[i,n]-indicatorVector[j,n]}.invLapMat.Transpose[{indicatorVector[i,n]-indicatorVector[j,n]}])[[1]][[1]]
-	],
-	{i,1,n},
-	{j,1,n}
-]
-]
-
-
-(* ::Subsection::Closed:: *)
 (*Sweep Set Algorithm*)
 
 
@@ -613,7 +567,7 @@ zeroDiag[M_]:=M-DiagonalMatrix[Diagonal[M]]
 indicatorVector[i_,n_]:=Insert[ConstantArray[0,n-1],1,i]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*Markov Chains*)
 
 
@@ -700,7 +654,7 @@ edgeWeights[G_]:=With[{A=WeightedAdjacencyMatrix[G]},
 randomGraphPlot[G_]:=GraphPlot[G,VertexCoordinates->Table[{RandomReal[],RandomReal[]},{i,1,VertexCount[G]}]]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*General Graph Functions*)
 
 
